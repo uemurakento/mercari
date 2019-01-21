@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- css -->
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" 
+    integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+    integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="/css/mercari.css" th:href="@{/css/mercari.css}"/>
+  <link rel="stylesheet" href="/css/linkdisabled.css" th:href="@{/css/linkdisabled.css}"/>
+  <!-- script -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+    integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/script/pagenation.js"></script>
+  <script type="text/javascript" src="/script/pagejump.js"></script>
+  <script type="text/javascript" src="/script/categoryselect.js"></script>
+  <script type="text/javascript" src="/script/jquery.cookie.js"></script>
+  <script type="text/javascript" src="/script/urlcookie.js"></script>
+  
+  
+  <title>Rakus Items</title>
+  
+  <!--/* categoryselect.jsの後に処理する必要がある */-->
+  <script type="text/javascript" src="/script/nowselected.js"></script>
+</head>
+<body>
+  <!-- navbar -->
+  <nav class="navbar navbar-inverse">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="./list.html" th:href="@{/list/view}">Rakus Items</a>
+    </div>
+    <div id="navbar" class="collapse navbar-collapse">
+      <div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a id="logout" href="./login.html" th:href="@{/logout}">Logout <i class="fa fa-power-off"></i></a></li>
+        </ul>
+        <p class="navbar-text navbar-right">
+          <span id="loginName">user: <span sec:authentication="name"></span></span>
+        </p>
+      </div>
+    </div>
+  </nav>
+  <div id="main" class="container-fluid">
+    <!-- addItem link -->
+    <div id="addItemButton">
+      <a class="btn btn-default" href="./add.html" th:href="@{/add/view}"><i class="fa fa-plus-square-o"></i> Add New Item</a>
+    </div>
+
+    <!-- 検索フォーム -->
+    <div id="forms">
+      <form action="" th:action="@{/list/view}" class="form-inline" role="form" method="get">
+        <div class="form-group">
+          <input type="text" class="form-control" id="name" placeholder="item name" name="name"/>
+        </div>
+        <div class="form-group"><i class="fa fa-plus"></i></div>
+        <div class="form-group">
+          <select class="form-control" id="parent-category" name="parent">
+            <option value="0">- parentCategory -</option>
+            <option th:each="parent : ${parents}" th:value="${parent.id}" th:label="${parent.name}"></option>
+          </select>
+          <select class="form-control" id="child-category" name="child">
+            <option value="0">- childCategory -</option>
+            <th:block th:each="child : ${children}" >
+	            <option th:value="${child.id}" th:label="${child.name}" class="child"></option>
+	            <option th:value="${child.parent}" class="child-parent" th:id="${child.id}"></option>
+            </th:block>
+          </select>
+          <select class="form-control" id="grandchild-category" name="grandchild">
+            <option value="0">- grandChild -</option>
+            <th:block th:each="grandchild : ${grandchildren}" >
+	            <option th:value="${grandchild.id}" th:label="${grandchild.name}" class="grandchild"></option>
+	            <option th:value="${grandchild.parent}" class="grandchild-parent" th:id="${grandchild.id}"></option>
+            </th:block>
+          </select>
+        </div>
+        <div class="form-group"><i class="fa fa-plus"></i></div>
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="brand" name="brand" id="brand"/>
+        </div>
+        <div class="form-group"></div>
+        <button type="submit" class="btn btn-default"><i class="fa fa-angle-double-right"></i> search</button>
+      </form>
+    </div>
+
+    <!-- pagination -->
+    <div class="pages">
+      <nav class="page-nav">
+        <ul class="pager">
+          <li class="previous"><a href="">&larr; prev</a></li>
+          <li class="next"><a href="">next &rarr;</a></li>
+        </ul>
+        <input type="hidden" th:value=${pageMax} id=pageMax>
+      </nav>
+    </div>
+
+    <!-- table -->
+    <div class="table-responsive">
+      <table id="item-table" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>name</th>
+            <th>price</th>
+            <th>category</th>
+            <th>brand</th>
+            <th>cond</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="item : ${items}">
+			<td><a th:href="@{/itemdetail/view(id=${item.id})}" th:text="${item.name}" id="item-detail"></a></td>
+			<td th:text="${item.price}"></td>
+			<td th:if="${item.categories.get(0).name != null && item.categories.get(0).name != ''}">
+				<a th:href="@{/list/view(parent=${item.categories.get(0).id})}"  th:text="${item.categories.get(0).name}"></a>/
+				<a th:href="@{/list/view(parent=${item.categories.get(0).id},child=${item.categories.get(1).id})}"  th:text="${item.categories.get(1).name}"></a>/
+				<a th:href="@{/list/view(parent=${item.categories.get(0).id},child=${item.categories.get(1).id},grandchild=${item.categories.get(2).id})}"  th:text="${item.categories.get(2).name}"></a>
+			</td>
+			<td th:if="${item.categories.get(0).name == null || item.categories.get(0).name == ''}">None</td>
+			<td><a th:href="@{/list/view(brandmatch=${item.brand})}"  th:text="${item.brand}"></a></td>
+			<td><p th:text="${item.condition}"></p></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- pagination -->
+    <div class="pages">
+      <nav class="page-nav">
+        <ul class="pager">
+          <li class="previous"><a href="">&larr; prev</a></li>
+          <li class="next"><a href="">next &rarr;</a></li>
+        </ul>
+      </nav>
+      <!-- ページ番号を指定して表示するフォーム -->
+      <div id="select-page">
+        <form class="form-inline">
+          <div class="form-group">
+            <div class="input-group col-xs-6">
+              <label></label>
+              <input type="number" class="form-control" id="page-jump-text" min="1">
+              <input type="text" name="dummy" style="display:none;">
+              <!-- 総ページ数 -->
+              <div class="input-group-addon">/ <span th:text=${pageMax}></span></div>
+            </div>
+            <div class="input-group col-xs-1">
+              <button type="button" class="btn btn-default" id="page-jump-button">Go</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
